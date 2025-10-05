@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mahjong MLX - Firebase Secure</title>
+    <title>Mahjong MLX - Play & Earn (BETA)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -37,13 +37,13 @@
     <div id="root"></div>
     <script type="text/babel">
         const firebaseConfig = {
-    apiKey: "AIzaSyD5xxJY8e3SBngiLGWTj4wNVP122A3OwGs",
-    authDomain: "mlx-majong.firebaseapp.com",
-    projectId: "mlx-majong",
-    storageBucket: "mlx-majong.firebasestorage.app",
-    messagingSenderId: "94760439277",
-    appId: "1:94760439277:web:db73308fbc348d08c6ebe4"
-};
+            apiKey: "AIzaSyD5xxJY8e3SBngiLGWTj4wNVP122A3OwGs",
+            authDomain: "mlx-majong.firebaseapp.com",
+            projectId: "mlx-majong",
+            storageBucket: "mlx-majong.firebasestorage.app",
+            messagingSenderId: "94760439277",
+            appId: "1:94760439277:web:db73308fbc348d08c6ebe4"
+        };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -51,8 +51,9 @@
         const EMAILJS_TEMPLATE_ID = 'template_iqxpxuk';
         const EMAILJS_PUBLIC_KEY = 'DuXFAfWjt0ofFpUXT';
         const { useState, useEffect } = React;
+        
         const MahjongMLX = () => {
-const [gameState, setGameState] = useState('login');
+            const [gameState, setGameState] = useState('login');
             const [user, setUser] = useState(null);
             const [level, setLevel] = useState(1);
             const [mmlxBalance, setMmlxBalance] = useState(0);
@@ -65,8 +66,6 @@ const [gameState, setGameState] = useState('login');
             const [password, setPassword] = useState('');
             const [isLogin, setIsLogin] = useState(true);
             const [exchangeRate, setExchangeRate] = useState(100000);
-const [loadingRate, setLoadingRate] = useState(true);
-            const [isAdmin, setIsAdmin] = useState(false);
             const [hint, setHint] = useState('');
             const [loading, setLoading] = useState(false);
             const [showAd, setShowAd] = useState(false);
@@ -81,7 +80,6 @@ const [loadingRate, setLoadingRate] = useState(true);
             const [adCountdown, setAdCountdown] = useState(5);
             const [adForCoinsUsed, setAdForCoinsUsed] = useState(false);
             const [mmlxPerAd, setMmlxPerAd] = useState(500);
-            const [mlxAddress, setMlxAddress] = useState('');
             const [tangledUsername, setTangledUsername] = useState('');
             const [showTangledPrompt, setShowTangledPrompt] = useState(false);
 
@@ -91,11 +89,15 @@ const [loadingRate, setLoadingRate] = useState(true);
                         const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            setUser({ uid: firebaseUser.uid, email: firebaseUser.email, username: userData.username });
+                            setUser({ 
+                                uid: firebaseUser.uid, 
+                                email: firebaseUser.email, 
+                                username: userData.username,
+                                emailVerified: firebaseUser.emailVerified
+                            });
                             setMmlxBalance(userData.mmlxBalance || 0);
                             setLevel(userData.level || 1);
                             setCompletedLevels(userData.completedLevels || 0);
-                            setMlxAddress(userData.mlxAddress || '');
                             setTangledUsername(userData.tangledUsername || '');
                             setGameState('menu');
                         }
@@ -107,7 +109,6 @@ const [loadingRate, setLoadingRate] = useState(true);
                 return () => unsubscribe();
             }, []);
 
-            // Load exchange rate from Firestore
             useEffect(() => {
                 const loadExchangeRate = async () => {
                     try {
@@ -116,15 +117,12 @@ const [loadingRate, setLoadingRate] = useState(true);
                             const rate = settingsDoc.data().exchangeRate;
                             if (rate) setExchangeRate(rate);
                         }
-                        setLoadingRate(false);
                     } catch (error) {
                         console.error('Error loading exchange rate:', error);
-                        setLoadingRate(false);
                     }
                 };
                 loadExchangeRate();
             }, []);
-
             const getTileSets = (lvl) => {
                 const basic = ['🀄', '🎋', '🎍', '🌸', '🌺', '🌻', '🌼', '🌷'];
                 if (lvl >= 15) return [...basic, ...['🏵️', '🌹', '🥀', '🪷']];
@@ -185,20 +183,19 @@ const [loadingRate, setLoadingRate] = useState(true);
                 setAdPurpose('tileRemoval'); setAdCountdown(5); setShowAd(true);
             };
             
-         const watchAdForCoins = () => {
-    if (adForCoinsUsed) { setHint('Already used!'); setTimeout(() => setHint(''), 2000); return; }
-    setAdPurpose('earnCoins'); setAdCountdown(5); setShowAd(true);
-};
+            const watchAdForCoins = () => {
+                if (adForCoinsUsed) { setHint('Already used!'); setTimeout(() => setHint(''), 2000); return; }
+                setAdPurpose('earnCoins'); setAdCountdown(5); setShowAd(true);
+            };
 
-// ADD THIS NEW FUNCTION HERE
-const sendVerificationEmail = async () => {
-    try {
-        await auth.currentUser.sendEmailVerification();
-        alert('Verification email sent! Check your inbox.');
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-};
+            const sendVerificationEmail = async () => {
+                try {
+                    await auth.currentUser.sendEmailVerification();
+                    alert('Verification email sent! Check your inbox.');
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            };
 
             const closeAdAndActivateRemoval = async () => {
                 setShowAd(false);
@@ -222,7 +219,6 @@ const sendVerificationEmail = async () => {
             const startLevel = () => { setTiles(generateTiles(level)); setSelectedTiles([]); setStartTime(Date.now()); setElapsedTime(0); setHint(''); setAdRemovalsUsed(0); setAdRemovalCooldown(0); setIsRemovalMode(false); setRemovalPreview([]); setAdForCoinsUsed(false); setGameState('playing'); };
 
             useEffect(() => { if (gameState === 'playing' && startTime) { const timer = setInterval(() => setElapsedTime(Math.floor((Date.now() - startTime) / 1000)), 1000); return () => clearInterval(timer); } }, [gameState, startTime]);
-
             const selectTile = (tile) => {
                 if (isRemovalMode) { handleRemovalClick(tile); return; }
                 if (tile.matched || isTileBlocked(tile, tiles)) { setHint('Blocked!'); setTimeout(() => setHint(''), 2000); return; }
@@ -244,7 +240,7 @@ const sendVerificationEmail = async () => {
                 const totalReward = baseReward + bonusReward;
                 const newBalance = mmlxBalance + totalReward;
                 setMmlxBalance(newBalance); setCompletedLevels(prev => prev + 1);
-                if (user) await db.collection('users').doc(user.uid).update({ mmlxBalance: newBalance, level: level + 1, completedLevels: completedLevels + 1, mlxAddress, tangledUsername });
+                if (user) await db.collection('users').doc(user.uid).update({ mmlxBalance: newBalance, level: level + 1, completedLevels: completedLevels + 1, tangledUsername });
                 alert(`Level Complete!\n\nTime: ${timeTaken}s\nBase: ${baseReward.toLocaleString()} MMLX\nBonus: ${bonusReward.toLocaleString()} MMLX\nTotal: ${totalReward.toLocaleString()} MMLX`);
                 if (adsEnabled && level % adFrequency === 0) { setAdPurpose('levelComplete'); setAdCountdown(5); setShowAd(true); } else { setLevel(prev => prev + 1); setGameState('menu'); }
             };
@@ -254,7 +250,7 @@ const sendVerificationEmail = async () => {
                 setLoading(true);
                 try {
                     if (isLogin) await auth.signInWithEmailAndPassword(username + '@mahjong-mlx.app', password);
-                    else { const userCredential = await auth.createUserWithEmailAndPassword(username + '@mahjong-mlx.app', password); await db.collection('users').doc(userCredential.user.uid).set({ username, mmlxBalance: 0, level: 1, completedLevels: 0, mlxAddress: '', tangledUsername: '', createdAt: new Date().toISOString() }); }
+                    else { const userCredential = await auth.createUserWithEmailAndPassword(username + '@mahjong-mlx.app', password); await db.collection('users').doc(userCredential.user.uid).set({ username, mmlxBalance: 0, level: 1, completedLevels: 0, tangledUsername: '', createdAt: new Date().toISOString() }); }
                 } catch (error) {
                     if (error.code === 'auth/user-not-found') alert('User not found. Please register first.');
                     else if (error.code === 'auth/wrong-password') alert('Incorrect password.');
@@ -263,54 +259,49 @@ const sendVerificationEmail = async () => {
                     setLoading(false);
                 }
             };
-const handleExchange = async () => {
-    // Email verification check
-    if (!user?.emailVerified) {
-        alert('⚠️ Email Verification Required\n\nPlease verify your email before exchanging.\n\nCheck your inbox for the verification link.');
-        return;
-    }
-    
-    if (mmlxBalance < 10000) { alert('Minimum: 10,000 MMLX'); return; }
-    if (!tangledUsername) { alert('⚠️ Tangled Username Required\n\nAdd your Tangled.com username in Settings.\n\n⭐ Your account MUST have a PINK BADGE (KYC verified).'); setGameState('settings'); return; }
-    
-    const exchangesRef = db.collection('exchanges');
-    const userExchanges = await exchangesRef.where('userId', '==', user.uid).orderBy('timestamp', 'desc').limit(1).get();
-    
-    if (!userExchanges.empty) {
-        const lastExchange = userExchanges.docs[0].data();
-        const daysSince = (Date.now() - lastExchange.timestamp.toMillis()) / (1000 * 60 * 60 * 24);
-        if (daysSince < 7) { 
-            alert(`⏳ Exchange Limit: Once Per Week\n\nYou can exchange again in ${Math.ceil(7 - daysSince)} days.\n\nLast exchange: ${new Date(lastExchange.timestamp.toMillis()).toLocaleDateString()}`); 
-            return; 
-        }
-    }
-    
-    const mlxAmount = (mmlxBalance / exchangeRate).toFixed(6);
-    const exchangeData = { userId: user.uid, username: user.username, userEmail: user.email, mmlxAmount: mmlxBalance, mlxAmount: mlxAmount, tangledUsername: tangledUsername, timestamp: firebase.firestore.FieldValue.serverTimestamp(), processed: false, requiresPinkBadge: true };
-    await exchangesRef.add(exchangeData);
-    const newBalance = 0;
-    setMmlxBalance(newBalance);
-    await db.collection('users').doc(user.uid).update({ mmlxBalance: newBalance });
-    try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { username: user.username, user_email: user.email, mmlx_amount: parseInt(mmlxBalance).toLocaleString(), mlx_amount: mlxAmount, tangled_username: tangledUsername, date: new Date().toLocaleString() }, EMAILJS_PUBLIC_KEY); } catch (error) { console.error('Email failed:', error); }
-    alert(`✅ Exchange Submitted!\n\n${parseInt(mmlxBalance).toLocaleString()} MMLX → ${mlxAmount} MLX\n\n📧 Confirmation sent to email\n⏱️ Processing: Within 7 days\n⭐ Requires: Pink badge on Tangled.com\n\nNext exchange: 7 days`);
-    setGameState('menu');
-};
 
-            const savePaymentInfo = async () => {
-                if (user) { await db.collection('users').doc(user.uid).update({ mlxAddress, tangledUsername }); setHint('Saved!'); setTimeout(() => setHint(''), 2000); }
+            const handleExchange = async () => {
+                if (!user?.emailVerified) {
+                    alert('⚠️ Email Verification Required\n\nPlease verify your email before exchanging.\n\nCheck your inbox for the verification link.');
+                    return;
+                }
+                if (mmlxBalance < 10000) { alert('Minimum: 10,000 MMLX'); return; }
+                if (!tangledUsername) { alert('⚠️ Tangled Username Required\n\nAdd your Tangled.com username in Settings.\n\n⭐ Your account MUST have a PINK BADGE (KYC verified).'); setGameState('settings'); return; }
+                const exchangesRef = db.collection('exchanges');
+                const userExchanges = await exchangesRef.where('userId', '==', user.uid).orderBy('timestamp', 'desc').limit(1).get();
+                if (!userExchanges.empty) {
+                    const lastExchange = userExchanges.docs[0].data();
+                    const daysSince = (Date.now() - lastExchange.timestamp.toMillis()) / (1000 * 60 * 60 * 24);
+                    if (daysSince < 7) { 
+                        alert(`⏳ Exchange Limit: Once Per Week\n\nYou can exchange again in ${Math.ceil(7 - daysSince)} days.\n\nLast exchange: ${new Date(lastExchange.timestamp.toMillis()).toLocaleDateString()}`); 
+                        return; 
+                    }
+                }
+                const mlxAmount = (mmlxBalance / exchangeRate).toFixed(6);
+                const exchangeData = { userId: user.uid, username: user.username, userEmail: user.email, mmlxAmount: mmlxBalance, mlxAmount: mlxAmount, tangledUsername: tangledUsername, timestamp: firebase.firestore.FieldValue.serverTimestamp(), processed: false, requiresPinkBadge: true };
+                await exchangesRef.add(exchangeData);
+                const newBalance = 0;
+                setMmlxBalance(newBalance);
+                await db.collection('users').doc(user.uid).update({ mmlxBalance: newBalance });
+                try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { username: user.username, user_email: user.email, mmlx_amount: parseInt(mmlxBalance).toLocaleString(), mlx_amount: mlxAmount, tangled_username: tangledUsername, date: new Date().toLocaleString() }, EMAILJS_PUBLIC_KEY); } catch (error) { console.error('Email failed:', error); }
+                alert(`✅ Exchange Submitted!\n\n${parseInt(mmlxBalance).toLocaleString()} MMLX → ${mlxAmount} MLX\n\n📧 Confirmation sent to email\n⏱️ Processing: Within 7 days\n⭐ Requires: Pink badge on Tangled.com\n\nNext exchange: 7 days`);
+                setGameState('menu');
             };
 
+            const savePaymentInfo = async () => {
+                if (user) { await db.collection('users').doc(user.uid).update({ tangledUsername }); setHint('Saved!'); setTimeout(() => setHint(''), 2000); }
+            };
             if (showAd) return (<div className="min-h-screen bg-black bg-opacity-95 flex items-center justify-center p-4"><div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center"><h2 className="text-2xl font-bold text-gray-800 mb-4">Advertisement</h2><div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-8 mb-4 min-h-[300px] flex flex-col items-center justify-center text-white shadow-2xl"><div className="text-6xl mb-2">🎮</div><p className="text-3xl font-bold mb-2">Play & Win!</p><p className="text-lg">Join 10M+ Players</p></div>{adCountdown > 0 && <div className="bg-gray-100 rounded-lg p-3 mb-4"><p className="text-sm text-gray-600">Wait <span className="font-bold text-purple-600">{adCountdown}</span> seconds...</p></div>}<button onClick={closeAdAndActivateRemoval} disabled={adCountdown > 0} className={`font-bold py-3 px-8 rounded-lg ${adCountdown > 0 ? 'bg-gray-300 text-gray-500' : 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'}`}>{adCountdown > 0 ? `Wait ${adCountdown}s` : adPurpose === 'tileRemoval' ? 'Activate Removal' : adPurpose === 'earnCoins' ? `Claim ${mmlxPerAd} MMLX` : 'Continue'}</button></div></div>);
 
             if (gameState === 'login') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center p-4"><div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"><h1 className="text-4xl font-bold text-purple-600 mb-2 text-center">Mahjong MLX</h1><p className="text-gray-600 text-center mb-8">Play & Earn Crypto</p><div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-4 mb-6"><p className="text-sm font-bold text-green-800 mb-2">Get Paid in MLX</p><p className="text-xs text-gray-700 mb-3">Join Tangled.com to receive your cryptocurrency rewards!</p><a href="https://alexisread.tangled.com/join?l=en&s1=majong" target="_blank" rel="noopener noreferrer" className="block w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-center hover:shadow-lg transition-all">Join Tangled.com FREE</a></div><div className="space-y-4"><input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full border-2 rounded-lg px-4 py-3" /><input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border-2 rounded-lg px-4 py-3" /><button onClick={handleAuth} disabled={loading} className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold py-3 rounded-lg">{loading ? 'Loading...' : isLogin ? 'Login' : 'Register'}</button><button onClick={() => setIsLogin(!isLogin)} className="w-full text-purple-600 text-sm">{isLogin ? "Register" : 'Login'}</button></div></div></div>);
 
-            if (gameState === 'menu') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4"><div className="max-w-md mx-auto"><div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-3 mb-4 rounded-xl shadow-lg"><p className="font-bold text-center text-sm">⚠️ BETA VERSION</p><p className="text-xs text-center mt-1">Exchanges processed within 7 days • Email verification + Tangled pink badge required</p></div>{user && !user.emailVerified && (<div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-4"><p className="text-yellow-800 font-bold mb-2">📧 Verify Your Email</p><p className="text-sm text-yellow-700 mb-3">Required before you can exchange MMLX</p><button onClick={sendVerificationEmail} className="w-full bg-yellow-500 text-white py-2 rounded-lg font-bold hover:bg-yellow-600">Send Verification Email</button></div>)}{completedLevels > 0 && !tangledUsername && !mlxAddress && !showTangledPrompt && <div
+            if (gameState === 'menu') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4"><div className="max-w-md mx-auto"><div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-3 mb-4 rounded-xl shadow-lg"><p className="font-bold text-center text-sm">⚠️ BETA VERSION</p><p className="text-xs text-center mt-1">Exchanges processed within 7 days • Email verification + Tangled pink badge required</p></div>{user && !user.emailVerified && (<div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-4"><p className="text-yellow-800 font-bold mb-2">📧 Verify Your Email</p><p className="text-sm text-yellow-700 mb-3">Required before you can exchange MMLX</p><button onClick={sendVerificationEmail} className="w-full bg-yellow-500 text-white py-2 rounded-lg font-bold hover:bg-yellow-600">Send Verification Email</button></div>)}{completedLevels > 0 && !tangledUsername && !showTangledPrompt && <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-4 border-green-400"><div className="text-center mb-4"><p className="text-2xl font-bold text-green-600 mb-2">Ready to Get Paid?</p><p className="text-gray-700 text-sm mb-1">You're earning MMLX tokens!</p><p className="text-gray-700 text-sm mb-4">Join Tangled.com to exchange them for real MLX cryptocurrency.</p></div><a href="https://alexisread.tangled.com/join?l=en&s1=majong" target="_blank" rel="noopener noreferrer" className="block w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-4 rounded-lg text-center hover:shadow-lg transition-all mb-3">Join Tangled.com FREE</a><button onClick={() => setShowTangledPrompt(true)} className="w-full text-gray-500 text-sm hover:text-gray-700">Maybe later</button></div>}<div className="bg-white rounded-2xl shadow-lg p-6 mb-4"><a href="https://alexisread.tangled.com/join?l=en&s1=majong" target="_blank" rel="noopener noreferrer" className="block w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-4 rounded-xl text-center hover:shadow-lg transition-all mb-4">JOIN TANGLED TO GET PAID</a><div className="flex items-center justify-between mb-4"><div><p className="text-sm text-gray-600">Welcome</p><p className="font-bold text-lg">{user?.username}</p></div><button onClick={() => { auth.signOut(); }} className="text-gray-400">Logout</button></div><div className="grid grid-cols-3 gap-4 text-center"><div className="bg-purple-50 rounded-lg p-3"><p className="text-2xl font-bold text-purple-600">{mmlxBalance.toLocaleString()}</p><p className="text-xs text-gray-600">MMLX</p></div><div className="bg-blue-50 rounded-lg p-3"><p className="text-2xl font-bold text-blue-600">{level}</p><p className="text-xs text-gray-600">Level</p></div><div className="bg-green-50 rounded-lg p-3"><p className="text-2xl font-bold text-green-600">{completedLevels}</p><p className="text-xs text-gray-600">Done</p></div></div></div><button onClick={startLevel} className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-2xl shadow-lg p-6 mb-4"><p className="text-2xl font-bold">Play Level {level}</p><p className="text-sm mt-1">Earn {(1000 + level * 100).toLocaleString()}+ MMLX</p></button><div className="grid grid-cols-2 gap-4"><button onClick={() => setGameState('wallet')} className="bg-white rounded-xl shadow p-4">Exchange</button><button onClick={() => setGameState('settings')} className="bg-white rounded-xl shadow p-4">Settings</button></div></div></div>);
 
             if (gameState === 'playing') return (<div className="min-h-screen bg-gradient-to-br from-amber-100 to-amber-200 p-2"><div className="max-w-4xl mx-auto"><div className="bg-white rounded-xl shadow p-3 mb-3 flex justify-between items-center flex-wrap gap-2"><div className="flex gap-3 items-center"><span className="font-bold">{elapsedTime}s</span><span className="text-purple-600">{tiles.filter(t => !t.matched).length} tiles</span></div><div className="flex gap-2"><button onClick={watchAdForCoins} disabled={adForCoinsUsed} className={`px-4 py-2 rounded-lg font-bold text-white text-sm ${adForCoinsUsed ? 'bg-gray-400' : 'bg-green-500'}`}>{adForCoinsUsed ? 'Used' : `+${mmlxPerAd}`}</button><button onClick={watchAdForRemoval} disabled={adRemovalCooldown > 0 || adRemovalsUsed >= maxAdRemovalsPerLevel} className={`px-4 py-2 rounded-lg font-bold text-white text-sm ${isRemovalMode ? 'bg-red-500' : adRemovalCooldown > 0 || adRemovalsUsed >= maxAdRemovalsPerLevel ? 'bg-gray-400' : 'bg-orange-500'}`}>{isRemovalMode ? 'SELECT' : adRemovalCooldown > 0 ? `${adRemovalCooldown}s` : `Remove (${adRemovalsUsed}/${maxAdRemovalsPerLevel})`}</button></div><button onClick={() => setGameState('menu')} className="bg-red-500 text-white px-3 py-1 rounded">Quit</button></div>{hint && <div className="bg-yellow-100 rounded-xl p-3 mb-3 text-center"><p className="font-bold text-yellow-700">{hint}</p></div>}<div className="bg-gradient-to-br from-amber-700 to-amber-900 rounded-xl p-4 flex items-center justify-center" style={{minHeight:'400px'}}><div style={{position:'relative',width:'650px',height:'450px'}}>{tiles.map(tile => { const blocked = isTileBlocked(tile, tiles); const selected = selectedTiles.find(t => t.id === tile.id); const willBeRemoved = removalPreview.includes(tile.id); return (<div key={tile.id} className={`tile-3d ${tile.matched?'tile-matched':''} ${blocked && !isRemovalMode?'tile-blocked':''} ${isRemovalMode ? 'tile-removal-mode' : ''}`} style={{left:`${tile.x*45+tile.z*2}px`,top:`${tile.y*45+tile.z*2}px`,zIndex:tile.z*100+tile.y*10+tile.x,width:'45px',height:'45px'}} onClick={() => !tile.matched && selectTile(tile)} onMouseEnter={() => !tile.matched && isRemovalMode && handleRemovalHover(tile)} onMouseLeave={() => setRemovalPreview([])}><div className={`tile-face ${selected?'tile-selected':''} ${willBeRemoved?'tile-will-remove':''}`} style={{width:'100%',height:'100%',fontSize:'1.75rem'}}>{tile.type}</div></div>); })}</div></div></div></div>);
 
-            if (gameState === 'wallet') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4"><div className="max-w-md mx-auto"><button onClick={() => setGameState('menu')} className="text-white mb-4">Back</button><div className="bg-white rounded-2xl p-6"><h2 className="text-2xl font-bold text-purple-600 mb-4">Exchange</h2><div className="bg-yellow-100 rounded-xl p-4 mb-4"><p className="text-3xl font-bold text-yellow-700">{mmlxBalance.toLocaleString()} MMLX</p><p className="text-gray-700 text-lg mt-1">= {(mmlxBalance/exchangeRate).toFixed(6)} MLX</p></div>{(!mlxAddress && !tangledUsername) && <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4 mb-4"><p className="text-orange-800 font-bold mb-2">Action Required</p><p className="text-sm text-orange-700">Add payment info in Settings!</p><button onClick={() => setGameState('settings')} className="mt-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Go to Settings</button></div>}<button onClick={handleExchange} disabled={mmlxBalance < 10000} className={`w-full py-3 rounded-xl font-bold text-white ${mmlxBalance >= 10000 ? 'bg-green-500' : 'bg-gray-400'}`}>{mmlxBalance >= 10000 ? 'Submit Exchange' : 'Need 10,000 MMLX'}</button></div></div></div>);
+            if (gameState === 'wallet') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4"><div className="max-w-md mx-auto"><button onClick={() => setGameState('menu')} className="text-white mb-4">Back</button><div className="bg-white rounded-2xl p-6"><h2 className="text-2xl font-bold text-purple-600 mb-4">Exchange</h2><div className="bg-yellow-100 rounded-xl p-4 mb-4"><p className="text-3xl font-bold text-yellow-700">{mmlxBalance.toLocaleString()} MMLX</p><p className="text-gray-700 text-lg mt-1">= {(mmlxBalance/exchangeRate).toFixed(6)} MLX</p></div>{!tangledUsername && <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4 mb-4"><p className="text-orange-800 font-bold mb-2">Action Required</p><p className="text-sm text-orange-700">Add payment info in Settings!</p><button onClick={() => setGameState('settings')} className="mt-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Go to Settings</button></div>}<button onClick={handleExchange} disabled={mmlxBalance < 10000} className={`w-full py-3 rounded-xl font-bold text-white ${mmlxBalance >= 10000 ? 'bg-green-500' : 'bg-gray-400'}`}>{mmlxBalance >= 10000 ? 'Submit Exchange' : 'Need 10,000 MMLX'}</button></div></div></div>);
 
-            if (gameState === 'settings') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4"><div className="max-w-md mx-auto"><button onClick={() => setGameState('menu')} className="text-white mb-4">Back</button><div className="bg-white rounded-2xl p-6 max-h-[calc(100vh-100px)] overflow-y-auto"><h2 className="text-2xl font-bold text-purple-600 mb-4">Settings</h2><div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50"><label className="block mb-2 text-sm font-bold">Tangled.com Username</label><input type="text" value={tangledUsername} onChange={(e)=>setTangledUsername(e.target.value)} placeholder="username" className="w-full border-2 rounded-lg px-4 py-2 mb-3" /><label className="block mb-2 text-sm font-bold">OR MLX Address</label><input type="text" value={mlxAddress} onChange={(e)=>setMlxAddress(e.target.value)} placeholder="MLX1..." className="w-full border-2 rounded-lg px-4 py-2 mb-3" /><button onClick={savePaymentInfo} className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Save Payment Info</button></div>{hint && <div className="mt-4 text-center text-green-600 font-bold">{hint}</div>}</div></div></div>);
+            if (gameState === 'settings') return (<div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4"><div className="max-w-md mx-auto"><button onClick={() => setGameState('menu')} className="text-white mb-4">Back</button><div className="bg-white rounded-2xl p-6 max-h-[calc(100vh-100px)] overflow-y-auto"><h2 className="text-2xl font-bold text-purple-600 mb-4">Settings</h2><div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50"><div className="bg-pink-100 border-2 border-pink-400 rounded-lg p-3 mb-4"><p className="text-pink-800 font-bold text-sm mb-1">⭐ Pink Badge Required</p><p className="text-xs text-pink-700">Your Tangled.com account MUST be KYC verified (pink badge) to receive payouts.</p></div><label className="block mb-2 text-sm font-bold">Tangled.com Username</label><input type="text" value={tangledUsername} onChange={(e)=>setTangledUsername(e.target.value)} placeholder="username" className="w-full border-2 rounded-lg px-4 py-2 mb-3" /><button onClick={savePaymentInfo} className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Save Payment Info</button></div>{hint && <div className="mt-4 text-center text-green-600 font-bold">{hint}</div>}</div></div></div>);
 
             return null;
         };
@@ -319,9 +310,3 @@ const handleExchange = async () => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
