@@ -65,6 +65,7 @@ const [gameState, setGameState] = useState('login');
             const [password, setPassword] = useState('');
             const [isLogin, setIsLogin] = useState(true);
             const [exchangeRate, setExchangeRate] = useState(100000);
+const [loadingRate, setLoadingRate] = useState(true);
             const [isAdmin, setIsAdmin] = useState(false);
             const [hint, setHint] = useState('');
             const [loading, setLoading] = useState(false);
@@ -104,6 +105,24 @@ const [gameState, setGameState] = useState('login');
                     }
                 });
                 return () => unsubscribe();
+            }, []);
+
+            // Load exchange rate from Firestore
+            useEffect(() => {
+                const loadExchangeRate = async () => {
+                    try {
+                        const settingsDoc = await db.collection('settings').doc('gameSettings').get();
+                        if (settingsDoc.exists) {
+                            const rate = settingsDoc.data().exchangeRate;
+                            if (rate) setExchangeRate(rate);
+                        }
+                        setLoadingRate(false);
+                    } catch (error) {
+                        console.error('Error loading exchange rate:', error);
+                        setLoadingRate(false);
+                    }
+                };
+                loadExchangeRate();
             }, []);
 
             const getTileSets = (lvl) => {
@@ -278,6 +297,7 @@ const handleExchange = async () => {
     </script>
 </body>
 </html>
+
 
 
 
