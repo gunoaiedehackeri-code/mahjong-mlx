@@ -247,19 +247,69 @@
             };
 
             const handleAuth = async () => {
-                if (!username || !password) { alert('Enter username and password'); return; }
-                setLoading(true);
-                try {
-                    if (isLogin) await auth.signInWithEmailAndPassword(username + '@mahjong-mlx.app', password);
-                    else { const userCredential = await auth.createUserWithEmailAndPassword(username + '@mahjong-mlx.app', password); await db.collection('users').doc(userCredential.user.uid).set({ username, mmlxBalance: 0, level: 1, completedLevels: 0, tangledUsername: '', createdAt: new Date().toISOString() }); }
-                } catch (error) {
-                    if (error.code === 'auth/user-not-found') alert('User not found. Please register first.');
-                    else if (error.code === 'auth/wrong-password') alert('Incorrect password.');
-                    else if (error.code === 'auth/email-already-in-use') alert('Username already exists.');
-                    else alert('Error: ' + error.message);
-                    setLoading(false);
-                }
-            };
+    if (!username || !password) {
+        alert('Enter username and password');
+        return;
+    }
+    
+    if (!isLogin && !email) {
+        alert('Email is required for registration');
+        return;
+    }
+    
+    setLoading(true);
+    
+    try {
+        if (isLogin) {
+            // LOGIN - Find user's email from Firestore
+            const usersRef = db.collection('users');
+            const snapshot = await usersRef.where('username', '==', username).get();
+            
+            if (snapshot.empty) {
+                alert('User not found. Please register first.');
+                setLoading(false);
+                return;
+            }
+            
+            const userData = snapshot.docs[0].data();
+            const userEmail = userData.email;
+            
+            // Sign in with their real email
+            await auth.signInWithEmailAndPassword(userEmail, password);
+            
+        } else {
+            // REGISTRATION - Use real email from input field
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            
+            // Save to Firestore
+            await db.collection('users').doc(userCredential.user.uid).set({
+                username: username,
+                email: email,
+                mmlxBalance: 0,
+                level: 1,
+                completedLevels: 0,
+                tangledUsername: '',
+                createdAt: new Date().toISOString()
+            });
+            
+            // Send verification email
+            await userCredential.user.sendEmailVerification();
+            alert('Account created! Check your email (and spam folder) for verification link.');
+        }
+        
+    } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+            alert('User not found. Please register first.');
+        } else if (error.code === 'auth/wrong-password') {
+            alert('Incorrect password.');
+        } else if (error.code === 'auth/email-already-in-use') {
+            alert('Email already in use. Try logging in instead.');
+        } else {
+            alert('Error: ' + error.message);
+        }
+        setLoading(false);
+    }
+};
 
             const handleExchange = async () => {
                 if (!user?.emailVerified) {
@@ -311,5 +361,6 @@
     </script>
 </body>
 </html>
+
 
 
